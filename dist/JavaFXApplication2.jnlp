@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<jnlp spec="1.0" xmlns:jfx="http://javafx.com" href="JavaFXApplication2.jnlp">
+  <information>
+    <title>JavaFXApplication2</title>
+    <vendor>Keenan</vendor>
+    <description>null</description>
+    <offline-allowed/>
+  </information>
+  <resources>
+    <j2se version="1.6+" href="http://java.sun.com/products/autodl/j2se"/>
+    <jar href="JavaFXApplication2.jar" size="39389" download="eager" />
+    <jar href="lib\StreamExtractor-1.0-SNAPSHOT.jar" size="13424" download="eager" />
+    <jar href="lib\opencv-341.jar" size="423917" download="eager" />
+  </resources>
+  <applet-desc  width="800" height="600" main-class="com.javafx.main.NoJavaFXFallback"  name="JavaFXApplication2" >
+    <param name="requiredFXVersion" value="8.0+"/>
+  </applet-desc>
+  <jfx:javafx-desc  width="800" height="600" main-class="javafxapplication2.JavaFXApplication2"  name="JavaFXApplication2" >
+    <fx:argument>http://114.110.17.6:8896/image.jpg?type=motion</fx:argument>
+    <fx:argument>123</fx:argument>
+  </jfx:javafx-desc>
+  <update check="always"/>
+</jnlp>

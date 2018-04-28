@@ -12,7 +12,6 @@
          <padding>
             <Insets bottom="25" left="25" right="25" top="25" />
          </padding>
-         <Button fx:id="button" alignment="center" text="Start Camera" /> <!--onAction="#startCamera" -->
       </HBox>
    </bottom>
    <center>

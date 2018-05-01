@@ -45,14 +45,15 @@ public class MainCCTVService {
     private static CascadeClassifier carsClassifier;    
     
     public static void main(String[] args) throws Exception {
-        if(args.length < 3 ) {
-            System.out.println("    Usage: java -jar com.mandelag.smartcctv.MainCCTVService <ip> <port> <cctv_address>");
+        if(args.length < 4 ) {
+            System.out.println("    Usage: java -jar com.mandelag.smartcctv.MainCCTVService <ip> <port> <cctv_address> <haar_classifier>");
             return;
         }
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
         carsClassifier = new CascadeClassifier();
-        carsClassifier.load("C:\\Users\\keenan\\gitready\\smart-cctv\\src\\res\\cars.xml");
-        
+        String classifier = args[3];
+        carsClassifier.load(classifier);
+        System.out.println(classifier);
         String serverAddress = args[0];
         String port = args[1];
         String cctv = args[2];

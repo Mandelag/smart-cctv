@@ -14,7 +14,6 @@ package com.mandelag.smartcctv.services;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import javax.servlet.ServletException;
-import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -106,7 +105,7 @@ public class CCTVServlet extends HttpServlet {
                     response.getOutputStream().write((image.length+"").getBytes(Charset.forName("UTF-8")));
                     //write header...
                     response.getOutputStream().write("\r\n\r\n".getBytes(Charset.forName("UTF-8")));
-                    response.getOutputStream().write(preImgByte);
+                    //response.getOutputStream().write(preImgByte);
                     response.getOutputStream().write(image);
                     response.getOutputStream().write(boundaryByte);
                     response.getOutputStream().flush();
@@ -125,7 +124,6 @@ public class CCTVServlet extends HttpServlet {
     }}
     public void receiveImage(byte[] image) {
         this.image = image;
-        System.out.println("IMAGE RECEIVED!");
         Thread.currentThread().interrupt();
     }
 

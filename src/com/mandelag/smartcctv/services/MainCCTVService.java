@@ -8,15 +8,11 @@ package com.mandelag.smartcctv.services;
 import com.mandelag.extractor.InputStreamExtractor;
 import com.mandelag.extractor.InputStreamMarker;
 import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.io.PipedInputStream;
-import java.io.PipedOutputStream;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.URL;
@@ -24,12 +20,11 @@ import java.net.URLConnection;
 import java.util.function.Consumer;
 import org.eclipse.jetty.server.Handler;
 import org.eclipse.jetty.server.Server;
-import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.DefaultHandler;
 import org.eclipse.jetty.server.handler.HandlerList;
-import org.eclipse.jetty.server.handler.ResourceHandler;
 import org.eclipse.jetty.servlet.ServletContextHandler;
 import org.eclipse.jetty.servlet.ServletHolder;
+import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
 import org.opencv.core.MatOfRect;
@@ -47,15 +42,20 @@ import org.opencv.objdetect.CascadeClassifier;
  */
 public class MainCCTVService {
 
+    private static CascadeClassifier carsClassifier;    
+    
     public static void main(String[] args) throws Exception {
-
-        //if(args.length < 3 ) {
-        //    System.out.println("    Usage: java -jar com.mandelag.smartcctv.MainCCTVService <ip> <web_port> <cctv_address>");
-        //    return;
-        //}
-        String serverAddress = "localhost";
-        String port = "9905";
-        String cctv = "http://114.110.17.6:8896/image.jpg?type=motion";
+        if(args.length < 3 ) {
+            System.out.println("    Usage: java -jar com.mandelag.smartcctv.MainCCTVService <ip> <port> <cctv_address>");
+            return;
+        }
+        System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+        carsClassifier = new CascadeClassifier();
+        carsClassifier.load("C:\\Users\\keenan\\gitready\\smart-cctv\\src\\res\\cars.xml");
+        
+        String serverAddress = args[0];
+        String port = args[1];
+        String cctv = args[2];
 
         Server server = new Server(new InetSocketAddress(InetAddress.getByName(serverAddress), Integer.parseInt(port)));
         URL cctvUrl = new URL(cctv);
@@ -63,7 +63,6 @@ public class MainCCTVService {
 
         ServletContextHandler context = new ServletContextHandler();
         context.setContextPath("/");
-        //context.addServlet("com.mandelag.smartcctv.services.CCTVServlet", "/smartcctv");
         CCTVServlet cs = new CCTVServlet();
         context.addServlet(new ServletHolder(cs), "/smartcctv");
         HandlerList handlers = new HandlerList();
@@ -77,36 +76,27 @@ public class MainCCTVService {
         }
 
         try (InputStream is = new BufferedInputStream(huc.getInputStream()); BufferedReader rs = new BufferedReader(new InputStreamReader(is))) {
-            Consumer<byte[]> byteConsumer = (b) -> {
-                System.out.println("got byte!");
-                try (BufferedOutputStream bos = new BufferedOutputStream(new FileOutputStream("C:\\Users\\keenan\\extract.jpeg"))) {
-                    bos.write(preImgByte);
-                    bos.write(b);
-
-                } catch (IOException e) {
-                    System.err.println(e);
-                }
-            };
 
             Consumer<byte[]> imageProcessor = (b) -> {
                 byte[] buf = new byte[b.length + 3];
                 try (ByteArrayOutputStream bos = new ByteArrayOutputStream(b.length + 3)) {
                     bos.write(preImgByte);
                     bos.write(b);
-                    byte[] processedImage = bos.toByteArray();
+                    byte[] processedImage = processImage(bos.toByteArray());
+                    //byte[] processedImage = bos.toByteArray();
+                    cs.receiveImage(processedImage);
                 } catch (IOException e) {
                 }
             };
             String separator = huc.getHeaderField("content-type").split("boundary=")[1];
 
-            System.out.println(separator);
             byte[] close = separator.getBytes();//Charset.forName("UTF-8")
             int[] intArray = new int[close.length];
             for (int i = 0; i < close.length; i++) {
                 intArray[i] = (int) close[i];
             }
 
-            InputStreamMarker imageExtract = new InputStreamMarker(preImg, intArray, cs::receiveImage);
+            InputStreamMarker imageExtract = new InputStreamMarker(preImg, intArray, imageProcessor);
 
             InputStreamExtractor ise = new InputStreamExtractor(is, new InputStreamMarker[]{imageExtract});
             new Thread(() -> {
@@ -124,19 +114,13 @@ public class MainCCTVService {
             System.err.println(e);
         }
     }
-
-    private static CascadeClassifier carsClassifier = new CascadeClassifier();
-
-    static {
-        carsClassifier.load("C:\\Users\\keenan\\Documents\\NetBeansProjects\\JavaFXApplication2\\src\\res\\cars.xml");
-    }
     
-    private byte[] processImage(byte[] imageBytes) {
+    private static byte[] processImage(byte[] imageBytes) {
         Mat frame = Imgcodecs.imdecode(new MatOfByte(imageBytes), Imgcodecs.CV_LOAD_IMAGE_UNCHANGED);//CV_LOAD_IMAGE_UNCHANGED
         //Mat rot = Imgproc.getRotationMatrix2D(new Point(frame.width()/2, frame.height()/2), 21, 1);
         //Imgproc.warpAffine(frame, frame, rot, new Size(frame.width(), frame.height()));
         MatOfRect matOfRect = new MatOfRect();
-        carsClassifier.detectMultiScale(frame, matOfRect, 1.4, 0, 0, new Size(30, 30), new Size(155, 155));
+        carsClassifier.detectMultiScale(frame, matOfRect, 1.4, 0, 0, new Size(30, 30), new Size(100, 100));
         //System.out.print(matOfRect.dump());
         Rect[] t = matOfRect.toArray();
         if (t.length > 0) {
@@ -144,11 +128,12 @@ public class MainCCTVService {
             for (int i = 0; i < t.length; i++) {
                 Imgproc.rectangle(frame, new Point(t[i].x, t[i].y),
                         new Point(t[i].x + t[i].width - 1, t[i].y + t[i].height - 1),
-                        new Scalar(255, 255, 0));
+                        new Scalar(255, 255, 0), 2);
             }
         }
         MatOfByte matOfByte = new MatOfByte();
         Imgcodecs.imencode(".JPEG", frame, matOfByte);
+        frame.release();
         return matOfByte.toArray();
     }
 }

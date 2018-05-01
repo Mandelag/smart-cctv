@@ -29,7 +29,8 @@ public class HttpMJPEGCapture {
         /*"http://202.51.112.91:676/image2"*/
 //        URL url = new URL("http://114.110.17.6:8924/JpegStream.cgi?username=bit&password=guest&channel=1");
 //        URL url = new URL("http://202.51.112.91:676/image2");
-        URL url = new URL("http://202.51.112.91:686/mjpg/video.mjpg");
+//"http://202.51.112.91:686/mjpg/video.mjpg"
+        URL url = new URL("http://localhost:9905/smartcctv");
         URLConnection huc = url.openConnection();
         
         //int[] preImg = new int[]{224,0,16,74,70,73,70};
@@ -65,7 +66,7 @@ public class HttpMJPEGCapture {
             InputStreamMarker imageExtract = new InputStreamMarker(preImg, intArray, byteConsumer);
             
             InputStreamExtractor ise = new InputStreamExtractor(is, new InputStreamMarker[]{imageExtract});
-            ise.extract();
+            //ise.extract();
             int r;
                 while( (r = is.read()) >= 0) {
                     System.out.println(r + " " + (char) r);

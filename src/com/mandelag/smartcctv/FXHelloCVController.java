@@ -8,13 +8,20 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
+import java.net.ServerSocket;
 import java.net.URL;
 import java.net.URLConnection;
+import java.net.UnknownHostException;
 import java.util.ResourceBundle;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import org.opencv.core.Mat;
 import org.opencv.imgproc.Imgproc;
@@ -54,6 +61,8 @@ public class FXHelloCVController implements Initializable {
 
     private String cctvUrl = "http://202.51.112.91:676/image2";
     private String objectId = "";
+    private InetAddress groupAddress;
+    private DatagramSocket ds;
 
     private static CascadeClassifier carsClassifier = new CascadeClassifier();
 
@@ -109,7 +118,10 @@ public class FXHelloCVController implements Initializable {
                                     }
                                     Image imageToShow = Utils.mat2Image(frame);
                                     updateImageView(currentFrame, imageToShow);
-
+                                    //MatOfByte buf = new MatOfByte();
+                                    //Imgcodecs.imencode(".JPEG", frame, buf);
+                                    //sendData(buf.toArray());
+                                    
                                 } catch (IOException e) {
                                     System.err.println(e);
                                 }
@@ -134,6 +146,24 @@ public class FXHelloCVController implements Initializable {
             }
         };
         new Thread(frameGrabber).start();
+    }
+    
+    private void sendData(byte[] data) {
+        try {
+            if(ds == null) {
+                ds = new DatagramSocket(6012);
+            }
+            groupAddress = InetAddress.getByName("224.6.12.1");
+            DatagramPacket dp = new DatagramPacket(data, data.length, groupAddress, 6006);
+            ds.send(dp);
+        } catch (IOException ex) {
+            Logger.getLogger(FXHelloCVController.class.getName()).log(Level.SEVERE, null, ex);
+        } finally {
+            if(ds != null) {
+                ds.close();
+            }
+        }
+        
     }
 
     /**

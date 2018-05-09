@@ -10,7 +10,6 @@ package com.mandelag.smartcctv.services;
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.logging.Level;
@@ -27,11 +26,11 @@ import javax.servlet.http.HttpServletResponse;
 public class CCTVServlet extends HttpServlet {
 
     MainCCTVService cctvService;
-    
+
     public CCTVServlet(MainCCTVService cctvService) {
         this.cctvService = cctvService;
     }
-    
+
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
      * methods.
@@ -44,12 +43,14 @@ public class CCTVServlet extends HttpServlet {
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         String param = request.getParameter("type");
-        switch(param) {
-            case "image":
-                handleImage(response);
-                break;
-            case "count":
-                handleCount(response);
+        if (param != null) {
+            switch (param) {
+                case "image":
+                    handleImage(response);
+                    break;
+                default:
+                    handleCount(response);
+            }
         }
     }
 
@@ -98,55 +99,60 @@ public class CCTVServlet extends HttpServlet {
         return "Short description";
     }// </editor-fold>
 
-    private void handleCount(HttpServletResponse response) throws IOException{
+    private void handleCount(HttpServletResponse response) throws IOException {
         response.getWriter().println(cctvService.getVehicleCount());
     }
-    
+
     private void handleImage(HttpServletResponse response) {
         String boundary = "--hehehe";
         byte[] contentType = "\r\nContent-Type: image/jpeg\r\n".getBytes(Charset.forName("UTF-8"));
         byte[] contentLength = "Content-Length: ".getBytes(Charset.forName("UTF-8"));
         byte[] boundaryByte = boundary.getBytes(Charset.forName("UTF-8"));
-        response.setContentType("multipart/x-mixed-replace;boundary="+boundary.substring(2));
+        response.setContentType("multipart/x-mixed-replace;boundary=" + boundary.substring(2));
         response.addHeader("Connection", "Keep-Alive");
         response.addHeader("Keep-Alive", "timeout=60000");
 
-        
         try {
             response.getOutputStream().write(boundaryByte);
-        }catch(IOException e){}
-        while(true) {
+        } catch (IOException e) {
+        }
+        while (true) {
             try {
                 Thread.sleep(0);
-                try{
+                try {
                     response.getOutputStream().write(contentType);
                     response.getOutputStream().write(contentLength);
-                    response.getOutputStream().write((image.length+"").getBytes(Charset.forName("UTF-8")));
+                    response.getOutputStream().write((image.length + "").getBytes(Charset.forName("UTF-8")));
                     //write header...
                     response.getOutputStream().write("\r\n\r\n".getBytes(Charset.forName("UTF-8")));
                     //response.getOutputStream().write(preImgByte);
                     response.getOutputStream().write(image);
                     response.getOutputStream().write(boundaryByte);
                     response.getOutputStream().flush();
-                }catch(IOException e){}
-            }catch(InterruptedException e){
-                
+                } catch (IOException e) {
+                }
+            } catch (InterruptedException e) {
+
             }
-        }   
+        }
     }
     private byte[] image;
     private int carCount;
-    
-    int[] preImg = new int[]{0xff,0xd8,0xff};
+
+    int[] preImg = new int[]{0xff, 0xd8, 0xff};
     byte[] preImgByte = new byte[preImg.length];
-    {for(int i=0; i < preImg.length ; i++) {
-        preImgByte[i] = (byte) preImg[i];
-    }}
+
+    {
+        for (int i = 0; i < preImg.length; i++) {
+            preImgByte[i] = (byte) preImg[i];
+        }
+    }
+
     public void receiveImage(byte[] image) {
         this.image = image;
         Thread.currentThread().interrupt();
     }
-    
+
     public void receiveCarCount(int carCount) {
         this.carCount = carCount;
     }

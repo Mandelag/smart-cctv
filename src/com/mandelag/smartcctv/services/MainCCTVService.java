@@ -57,7 +57,7 @@ public class MainCCTVService {
         String cctv = args[2];
         String classifier = args[3];
         MainCCTVService cctvService = new MainCCTVService();
-        
+        cctvService.start(serverAddress, port, cctv, classifier);
     }
     
     public void start(String serverAddress, String port, String  cctv, String classifier) throws Exception{

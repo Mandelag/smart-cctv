@@ -43,6 +43,7 @@ import org.opencv.objdetect.CascadeClassifier;
 public class MainCCTVService {
 
     private static CascadeClassifier carsClassifier;    
+    private int vehicleCount = 0;
     
     public static void main(String[] args) throws Exception {
         if(args.length < 4 ) {
@@ -123,7 +124,7 @@ public class MainCCTVService {
         }
     }
     
-    private static byte[] processImage(byte[] imageBytes) {
+    private byte[] processImage(byte[] imageBytes) {
         Mat frame = Imgcodecs.imdecode(new MatOfByte(imageBytes), Imgcodecs.CV_LOAD_IMAGE_UNCHANGED);//CV_LOAD_IMAGE_UNCHANGED
         //Mat rot = Imgproc.getRotationMatrix2D(new Point(frame.width()/2, frame.height()/2), 21, 1);
         //Imgproc.warpAffine(frame, frame, rot, new Size(frame.width(), frame.height()));
@@ -139,9 +140,14 @@ public class MainCCTVService {
                         new Scalar(255, 255, 0), 2);
             }
         }
+        vehicleCount = t.length;
         MatOfByte matOfByte = new MatOfByte();
         Imgcodecs.imencode(".JPEG", frame, matOfByte);
         frame.release();
         return matOfByte.toArray();
+    }
+    
+    public int getVehicleCount(){
+        return this.vehicleCount;
     }
 }

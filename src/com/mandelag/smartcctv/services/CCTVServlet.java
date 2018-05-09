@@ -13,6 +13,8 @@ package com.mandelag.smartcctv.services;
 
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
@@ -41,7 +43,14 @@ public class CCTVServlet extends HttpServlet {
      */
     protected void processRequest(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        handleImage(response);
+        String param = request.getParameter("type");
+        switch(param) {
+            case "image":
+                handleImage(response);
+                break;
+            case "count":
+                handleCount(response);
+        }
     }
 
     private void printDefault(HttpServletResponse response) throws IOException {
@@ -89,6 +98,10 @@ public class CCTVServlet extends HttpServlet {
         return "Short description";
     }// </editor-fold>
 
+    private void handleCount(HttpServletResponse response) throws IOException{
+        response.getWriter().println(cctvService.getVehicleCount());
+    }
+    
     private void handleImage(HttpServletResponse response) {
         String boundary = "--hehehe";
         byte[] contentType = "\r\nContent-Type: image/jpeg\r\n".getBytes(Charset.forName("UTF-8"));

@@ -24,6 +24,12 @@ import javax.servlet.http.HttpServletResponse;
  */
 public class CCTVServlet extends HttpServlet {
 
+    MainCCTVService cctvService;
+    
+    public CCTVServlet(MainCCTVService cctvService) {
+        this.cctvService = cctvService;
+    }
+    
     /**
      * Processes requests for both HTTP <code>GET</code> and <code>POST</code>
      * methods.
@@ -116,6 +122,7 @@ public class CCTVServlet extends HttpServlet {
         }   
     }
     private byte[] image;
+    private int carCount;
     
     int[] preImg = new int[]{0xff,0xd8,0xff};
     byte[] preImgByte = new byte[preImg.length];
@@ -125,6 +132,10 @@ public class CCTVServlet extends HttpServlet {
     public void receiveImage(byte[] image) {
         this.image = image;
         Thread.currentThread().interrupt();
+    }
+    
+    public void receiveCarCount(int carCount) {
+        this.carCount = carCount;
     }
 
     @Override

@@ -50,13 +50,20 @@ public class MainCCTVService {
             return;
         }
         System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
-        carsClassifier = new CascadeClassifier();
-        String classifier = args[3];
-        carsClassifier.load(classifier);
-        System.out.println(classifier);
+        
         String serverAddress = args[0];
         String port = args[1];
         String cctv = args[2];
+        String classifier = args[3];
+        MainCCTVService cctvService = new MainCCTVService();
+        
+    }
+    
+    public void start(String serverAddress, String port, String  cctv, String classifier) throws Exception{
+        carsClassifier = new CascadeClassifier();
+        
+        carsClassifier.load(classifier);
+        System.out.println(classifier);
 
         Server server = new Server(new InetSocketAddress(InetAddress.getByName(serverAddress), Integer.parseInt(port)));
         URL cctvUrl = new URL(cctv);
@@ -64,7 +71,7 @@ public class MainCCTVService {
 
         ServletContextHandler context = new ServletContextHandler();
         context.setContextPath("/");
-        CCTVServlet cs = new CCTVServlet();
+        CCTVServlet cs = new CCTVServlet(this);
         context.addServlet(new ServletHolder(cs), "/smartcctv");
         HandlerList handlers = new HandlerList();
         handlers.setHandlers(new Handler[]{context, new DefaultHandler()});
